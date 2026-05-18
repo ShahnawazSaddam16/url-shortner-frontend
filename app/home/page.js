@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
 
 export const Home = () => {
   const router = useRouter();
@@ -46,6 +47,7 @@ export const Home = () => {
   return (
     <>
       <Navbar />
+      <Hero />
     </>
   );
 };
