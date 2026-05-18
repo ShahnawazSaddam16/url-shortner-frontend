@@ -197,7 +197,7 @@ const Navbar = () => {
               </div>
 
               <span className="text-[17px] font-bold text-gray-900 tracking-tight group-hover:text-purple-700 transition-colors duration-200">
-                Url<span className="text-purple-600">Shortner</span>
+                Url-<span className="text-purple-600">Shortner</span>
               </span>
             </button>
 
