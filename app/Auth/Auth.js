@@ -70,7 +70,7 @@ const Auth = () => {
         );
 
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push("/home");
         }, 300);
       }
 

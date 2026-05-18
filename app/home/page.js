@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 
-export const Dashboard = () => {
+export const Home = () => {
   const router = useRouter();
 
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
@@ -50,4 +50,4 @@ export const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Home;
