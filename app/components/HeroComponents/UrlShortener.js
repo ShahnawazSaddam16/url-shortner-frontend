@@ -103,7 +103,7 @@ const UrlShortener = () => {
 
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col md:flex-row items-center gap-3"
+            className="flex flex-wrap items-center gap-3"
           >
             <input
               type="url"
@@ -245,12 +245,6 @@ const UrlShortener = () => {
                 )}
               </div>
             )}
-          </div>
-
-          <div className="mt-6 flex justify-center">
-            <button className="px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-semibold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-2">
-              Visit Your Dashboard <ArrowBigRight size={20} />
-            </button>
           </div>
         </div>
       </div>
