@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import WelcomeUser from "../components/DashboardComponents/WelcomeUser";
+import UrlFetching from "../components/DashboardComponents/UrlFetching";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -43,6 +44,7 @@ const Dashboard = () => {
     <>
       <Navbar />
       <WelcomeUser />
+      <UrlFetching />
     </>
   );
 };
