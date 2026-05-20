@@ -23,7 +23,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-
 export const UrlFetching = () => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
   const router = useRouter();
@@ -38,20 +37,21 @@ export const UrlFetching = () => {
   const [notif, setNotif] = useState({ show: false, message: "", type: "" });
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchUrls = async () => {
-      try {
-        const res = await fetch(`${API_ORIGIN}/user-urls`, {
-          credentials: "include",
-        });
-        const data = await res.json();
-        if (data.success) {
-          setUrls(data.user_urls);
-        }
-      } catch (err) {
-        console.log(err);
+  const fetchUrls = async () => {
+    try {
+      const res = await fetch(`${API_ORIGIN}/user-urls`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUrls(data.user_urls);
       }
-    };
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
     fetchUrls();
   }, [API_ORIGIN]);
 
@@ -129,17 +129,17 @@ export const UrlFetching = () => {
       } catch (e) {}
 
       if (!res.ok) {
-        console.error("Delete failed", res.status, text);
         setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
         setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        setDeleteLoading(false);
         return;
       }
 
       if (data && data.success) {
-        setUrls((prev) => prev.filter((u) => u._id !== target._id));
         setDeleteModal(null);
         setNotif({ show: true, message: "Link deleted", type: "success" });
         setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        await fetchUrls();
       } else {
         setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
         setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
@@ -154,18 +154,18 @@ export const UrlFetching = () => {
   };
 
   return (
-    <section className="mt-10 w-full px-0">
-      <div className="w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+    <section className="mt-6 sm:mt-10 w-full px-0">
+      <div className="w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-3 sm:p-6 lg:p-8 shadow-2xl">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-base min-[360px]:text-lg sm:text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">
             Your Short URLs
           </h1>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">
+          <p className="text-[11px] min-[360px]:text-xs sm:text-sm text-gray-400 mt-1">
             Manage and monitor your generated links
           </p>
         </div>
 
-        <div className="grid gap-3 sm:gap-4">
+        <div className="grid gap-2 sm:gap-3 lg:gap-4">
           {urls.length > 0 ? (
             urls.map((item, index) => (
               <motion.div
@@ -174,47 +174,46 @@ export const UrlFetching = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: index * 0.08 }}
                 whileHover={{ y: -2 }}
-                className="w-full rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-4 py-4 sm:px-5 sm:py-5"
+                className="w-full rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl px-2.5 py-2.5 min-[360px]:px-3 min-[360px]:py-3 sm:px-5 sm:py-5"
               >
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
-                        <Link2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div className="flex flex-col gap-2.5 min-[360px]:gap-3 sm:gap-4">
+                  <div className="flex items-start justify-between gap-1.5 min-[360px]:gap-2 sm:gap-3">
+                    <div className="flex items-center gap-1.5 min-[360px]:gap-2 sm:gap-3 min-w-0 flex-1">
+                      <div className="w-8 h-8 min-[360px]:w-9 min-[360px]:h-9 sm:w-12 sm:h-12 shrink-0 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
+                        <Link2 className="w-3.5 h-3.5 min-[360px]:w-4 min-[360px]:h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h2 className="text-sm sm:text-base lg:text-lg font-bold text-white truncate max-w-[120px] sm:max-w-none">
+                        <div className="flex items-center gap-1 min-[360px]:gap-1.5 sm:gap-2 flex-wrap">
+                          <h2 className="text-xs min-[360px]:text-sm sm:text-base lg:text-lg font-bold text-white truncate max-w-[70px] min-[360px]:max-w-[90px] sm:max-w-none">
                             {item.shortCode || "No Code"}
                           </h2>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 font-medium shrink-0">
+                          <span className="text-[10px] min-[360px]:text-xs px-1 min-[360px]:px-1.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 font-medium shrink-0">
                             Short
                           </span>
                         </div>
-                        
-                          <a
+                        <a
                           href={item.shortUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs sm:text-sm text-pink-400 hover:text-pink-300 transition mt-0.5 group"
+                          className="flex items-center gap-1 text-[10px] min-[360px]:text-xs sm:text-sm text-pink-400 hover:text-pink-300 transition mt-0.5 group"
                         >
-                          <span className="truncate max-w-[160px] sm:max-w-xs lg:max-w-sm">
+                          <span className="truncate max-w-[100px] min-[360px]:max-w-[130px] sm:max-w-xs lg:max-w-sm">
                             {item.shortUrl}
                           </span>
-                          <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100 transition" />
+                          <ExternalLink className="w-2.5 h-2.5 min-[360px]:w-3 min-[360px]:h-3 shrink-0 opacity-0 group-hover:opacity-100 transition" />
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => handleCopy(item.shortUrl, item._id)}
-                        className="flex items-center gap-1.5 px-2.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 text-white text-xs sm:text-sm font-semibold hover:scale-105 transition shadow-lg shadow-purple-900/40"
+                        className="flex items-center gap-1 px-1.5 py-1.5 min-[360px]:px-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 text-white text-[10px] min-[360px]:text-xs sm:text-sm font-semibold hover:scale-105 transition shadow-lg shadow-purple-900/40"
                       >
                         {copiedId === item._id ? (
-                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <Check className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4" />
                         ) : (
-                          <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <Copy className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4" />
                         )}
                         <span className="hidden sm:inline">
                           {copiedId === item._id ? "Copied" : "Copy"}
@@ -223,18 +222,18 @@ export const UrlFetching = () => {
 
                       <button
                         onClick={() => openEdit(item)}
-                        className="flex items-center gap-1.5 px-2.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 text-white text-xs sm:text-sm font-semibold hover:scale-105 transition shadow-lg shadow-pink-900/40"
+                        className="flex items-center gap-1 px-1.5 py-1.5 min-[360px]:px-2 sm:px-4 sm:py-2 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 text-white text-[10px] min-[360px]:text-xs sm:text-sm font-semibold hover:scale-105 transition shadow-lg shadow-pink-900/40"
                       >
-                        <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <Pencil className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4" />
                         <span className="hidden sm:inline">Edit</span>
                       </button>
 
                       {item.qrCode && (
                         <button
                           onClick={() => setQrModal(item)}
-                          className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-purple-300 hover:scale-105 hover:bg-white/10 transition"
+                          className="w-7 h-7 min-[360px]:w-8 min-[360px]:h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-purple-300 hover:scale-105 hover:bg-white/10 transition"
                         >
-                          <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <QrCode className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       )}
 
@@ -243,53 +242,52 @@ export const UrlFetching = () => {
                           e.stopPropagation();
                           setDeleteModal(item);
                         }}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center justify-center text-red-400 hover:scale-105 hover:bg-red-500/15 transition"
+                        className="w-7 h-7 min-[360px]:w-8 min-[360px]:h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center justify-center text-red-400 hover:scale-105 hover:bg-red-500/15 transition"
                       >
-                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <Trash2 className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 pt-3 border-t border-white/5">
-                    <div className="flex items-start gap-2.5 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3">
-                      <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-400 mt-0.5 shrink-0" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 min-[360px]:gap-2 sm:gap-3 pt-2 sm:pt-3 border-t border-white/5">
+                    <div className="flex items-start gap-2 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2 min-[360px]:px-3 sm:px-4 sm:py-3 sm:col-span-2 lg:col-span-1">
+                      <Globe className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4 text-pink-400 mt-0.5 shrink-0" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-gray-500 font-medium mb-0.5">
+                        <p className="text-[10px] min-[360px]:text-xs text-gray-500 font-medium mb-0.5">
                           Original URL
                         </p>
-                        
-                          <a
+                        <a
                           href={item.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-gray-300 hover:text-white transition truncate block"
+                          className="text-[10px] min-[360px]:text-xs text-gray-300 hover:text-white transition truncate block"
                         >
                           {item.originalUrl}
                         </a>
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3">
-                      <Hash className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 mt-0.5 shrink-0" />
+                    <div className="flex items-start gap-2 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2 min-[360px]:px-3 sm:px-4 sm:py-3">
+                      <Hash className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4 text-purple-400 mt-0.5 shrink-0" />
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-500 font-medium mb-0.5">
+                        <p className="text-[10px] min-[360px]:text-xs text-gray-500 font-medium mb-0.5">
                           Short Code
                         </p>
-                        <p className="text-xs text-gray-300 font-mono">
+                        <p className="text-[10px] min-[360px]:text-xs text-gray-300 font-mono">
                           {item.shortCode || "—"}
                         </p>
                       </div>
                     </div>
 
                     {item.password && (
-                      <div className="flex items-start gap-2.5 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5 sm:px-4 sm:py-3 sm:col-span-2 lg:col-span-1">
-                        <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-400 mt-0.5 shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs text-gray-500 font-medium mb-0.5">
+                      <div className="flex items-start gap-2 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2 min-[360px]:px-3 sm:px-4 sm:py-3">
+                        <ShieldCheck className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4 text-pink-400 mt-0.5 shrink-0" />
+                        <div className="min-h-0 flex-1">
+                          <p className="text-[10px] min-[360px]:text-xs text-gray-500 font-medium mb-0.5">
                             Password
                           </p>
                           <div className="flex items-center gap-2">
-                            <p className="text-xs text-gray-300 font-mono tracking-widest">
+                            <p className="text-[10px] min-[360px]:text-xs text-gray-300 font-mono tracking-widest">
                               {visiblePasswords[item._id]
                                 ? item.password
                                 : "••••••••"}
@@ -313,7 +311,7 @@ export const UrlFetching = () => {
               </motion.div>
             ))
           ) : (
-            <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 py-12 sm:py-14 text-center">
+            <div className="rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 py-10 sm:py-14 text-center">
               <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
@@ -347,7 +345,7 @@ export const UrlFetching = () => {
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl"
+              className="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-5 sm:p-8 shadow-2xl"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5 sm:hidden" />
 
@@ -358,7 +356,7 @@ export const UrlFetching = () => {
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-5 sm:mb-6">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
                   <QrCode className="w-5 h-5 text-white" />
                 </div>
@@ -374,12 +372,11 @@ export const UrlFetching = () => {
                   alt="QR Code"
                   width={192}
                   height={192}
-                  className="w-40 h-40 sm:w-48 sm:h-48 object-contain"
+                  className="w-36 h-36 sm:w-48 sm:h-48 object-contain"
                 />
               </div>
 
-              
-                <a
+              <a
                 href={qrModal.shortUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -412,7 +409,7 @@ export const UrlFetching = () => {
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-5 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5 sm:hidden" />
 
@@ -423,7 +420,7 @@ export const UrlFetching = () => {
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-3 mb-6 sm:mb-7">
+              <div className="flex items-center gap-3 mb-5 sm:mb-7">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center">
                   <Pencil className="w-5 h-5 text-white" />
                 </div>
@@ -437,7 +434,7 @@ export const UrlFetching = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 sm:gap-5">
+              <div className="flex flex-col gap-3 sm:gap-5">
                 <div>
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 block">
                     Short Code
@@ -513,16 +510,16 @@ export const UrlFetching = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 mt-6 sm:mt-8">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mt-5 sm:mt-8">
                 <button
                   onClick={closeEdit}
-                  className="flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
+                  className="w-full sm:flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleEditSave}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-purple-900/40"
+                  className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-pink-500 text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-purple-900/40"
                 >
                   <Save className="w-4 h-4" />
                   Save Changes
@@ -544,7 +541,7 @@ export const UrlFetching = () => {
               background: "rgba(12,4,24,0.85)",
               backdropFilter: "blur(12px)",
             }}
-            onClick={() => setDeleteModal(null)}
+            onClick={() => !deleteLoading && setDeleteModal(null)}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 40 }}
@@ -552,18 +549,19 @@ export const UrlFetching = () => {
               exit={{ scale: 0.95, opacity: 0, y: 40 }}
               transition={{ duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl"
+              className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-5 sm:p-8 shadow-2xl"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5 sm:hidden" />
 
               <button
-                onClick={() => setDeleteModal(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition"
+                onClick={() => !deleteLoading && setDeleteModal(null)}
+                disabled={deleteLoading}
+                className="absolute top-4 right-4 w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition disabled:opacity-40"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex flex-col items-center text-center gap-4 mb-6">
+              <div className="flex flex-col items-center text-center gap-4 mb-5 sm:mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                   <AlertTriangle className="w-7 h-7 text-red-400" />
                 </div>
@@ -581,7 +579,7 @@ export const UrlFetching = () => {
                 </div>
               </div>
 
-              <div className="rounded-xl border border-white/5 bg-white/5 px-4 py-3 mb-6">
+              <div className="rounded-xl border border-white/5 bg-white/5 px-4 py-3 mb-5 sm:mb-6">
                 <p className="text-xs text-gray-500 font-medium mb-0.5">
                   Short URL
                 </p>
@@ -593,17 +591,18 @@ export const UrlFetching = () => {
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={() => setDeleteModal(null)}
-                  className="flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
+                  disabled={deleteLoading}
+                  className="w-full sm:flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition disabled:opacity-40"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleteLoading}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-red-900/40 ${deleteLoading ? 'opacity-60 pointer-events-none' : ''}`}
+                  className={`w-full sm:flex-1 flex items-center justify-center gap-2 py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-red-900/40 ${deleteLoading ? "opacity-60 pointer-events-none" : ""}`}
                 >
                   <Trash2 className="w-4 h-4" />
-                  Delete
+                  {deleteLoading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </motion.div>
@@ -618,11 +617,11 @@ export const UrlFetching = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.22 }}
-            className="fixed right-4 bottom-6 sm:bottom-8 z-50"
+            className="fixed right-3 bottom-5 sm:right-4 sm:bottom-8 z-50"
           >
-            <div className="min-w-[220px] rounded-xl bg-[#0f0720]/95 border border-white/5 p-3 shadow-lg">
+            <div className="min-w-[200px] sm:min-w-[220px] rounded-xl bg-[#0f0720]/95 border border-white/5 p-3 shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0">
                   <Check className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
