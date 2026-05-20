@@ -71,28 +71,39 @@ export const UrlFetching = () => {
     setEditForm({});
   };
 
-  const handleEditSave = async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/user-urls/${editModal._id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setUrls((prev) =>
-          prev.map((u) =>
-            u._id === editModal._id ? { ...u, ...editForm } : u
-          )
-        );
-        closeEdit();
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
+const handleEditSave = async () => {
+  try {
+    const payload = {
+      originalUrl: editForm.originalUrl,
+      expiryDate: editForm.expiryDate,
+      shortCode: editForm.shortCode,
+    };
 
+    if (editForm.password && editForm.password.trim() !== "") {
+      payload.password = editForm.password;
+    }
+
+    const res = await fetch(`${API_ORIGIN}/updating-url/${editModal._id}`, {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      setUrls((prev) =>
+        prev.map((u) =>
+          u._id === editModal._id ? data.data : u
+        )
+      );
+      closeEdit();
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
   return (
     <section className="mt-10 w-full px-0">
       <div className="w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
