@@ -17,18 +17,26 @@ import {
   Globe,
   Hash,
   Save,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+
 
 export const UrlFetching = () => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
+  const router = useRouter();
 
   const [urls, setUrls] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   const [qrModal, setQrModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
   const [editForm, setEditForm] = useState({});
+  const [notif, setNotif] = useState({ show: false, message: "", type: "" });
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     const fetchUrls = async () => {
@@ -71,39 +79,80 @@ export const UrlFetching = () => {
     setEditForm({});
   };
 
-const handleEditSave = async () => {
-  try {
-    const payload = {
-      originalUrl: editForm.originalUrl,
-      expiryDate: editForm.expiryDate,
-      shortCode: editForm.shortCode,
-    };
+  const handleEditSave = async () => {
+    try {
+      const payload = {
+        originalUrl: editForm.originalUrl,
+        expiryDate: editForm.expiryDate,
+        shortCode: editForm.shortCode,
+      };
 
-    if (editForm.password && editForm.password.trim() !== "") {
-      payload.password = editForm.password;
+      if (editForm.password && editForm.password.trim() !== "") {
+        payload.password = editForm.password;
+      }
+
+      const res = await fetch(`${API_ORIGIN}/updating-url/${editModal._id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setUrls((prev) =>
+          prev.map((u) => (u._id === editModal._id ? data.data : u))
+        );
+        setNotif({ show: true, message: "Link updated", type: "success" });
+        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        closeEdit();
+      }
+    } catch (err) {
+      console.log(err);
     }
+  };
 
-    const res = await fetch(`${API_ORIGIN}/updating-url/${editModal._id}`, {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const handleDelete = async () => {
+    const target = deleteModal;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${API_ORIGIN}/deleting-url/${target._id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-    const data = await res.json();
+      const text = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {}
 
-    if (data.success) {
-      setUrls((prev) =>
-        prev.map((u) =>
-          u._id === editModal._id ? data.data : u
-        )
-      );
-      closeEdit();
+      if (!res.ok) {
+        console.error("Delete failed", res.status, text);
+        setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
+        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        return;
+      }
+
+      if (data && data.success) {
+        setUrls((prev) => prev.filter((u) => u._id !== target._id));
+        setDeleteModal(null);
+        setNotif({ show: true, message: "Link deleted", type: "success" });
+        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+      } else {
+        setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
+        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+      }
+    } catch (err) {
+      console.log(err);
+      setNotif({ show: true, message: "Failed to delete", type: "error" });
+      setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+    } finally {
+      setDeleteLoading(false);
     }
-  } catch (err) {
-    console.log(err);
-  }
-};
+  };
+
   return (
     <section className="mt-10 w-full px-0">
       <div className="w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
@@ -142,7 +191,8 @@ const handleEditSave = async () => {
                             Short
                           </span>
                         </div>
-                        <a
+                        
+                          <a
                           href={item.shortUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -187,6 +237,16 @@ const handleEditSave = async () => {
                           <QrCode className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </button>
                       )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteModal(item);
+                        }}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-red-500/20 bg-red-500/5 flex items-center justify-center text-red-400 hover:scale-105 hover:bg-red-500/15 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </button>
                     </div>
                   </div>
 
@@ -197,7 +257,8 @@ const handleEditSave = async () => {
                         <p className="text-xs text-gray-500 font-medium mb-0.5">
                           Original URL
                         </p>
-                        <a
+                        
+                          <a
                           href={item.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -317,7 +378,8 @@ const handleEditSave = async () => {
                 />
               </div>
 
-              <a
+              
+                <a
                 href={qrModal.shortUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -451,7 +513,7 @@ const handleEditSave = async () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-6 sm:mt-8">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mt-6 sm:mt-8">
                 <button
                   onClick={closeEdit}
                   className="flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
@@ -467,6 +529,109 @@ const handleEditSave = async () => {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+            style={{
+              background: "rgba(12,4,24,0.85)",
+              backdropFilter: "blur(12px)",
+            }}
+            onClick={() => setDeleteModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 40 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[#1a0828]/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl"
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-5 sm:hidden" />
+
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="flex flex-col items-center text-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                  <AlertTriangle className="w-7 h-7 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-lg sm:text-xl">
+                    Delete Short URL
+                  </h2>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1.5 max-w-xs">
+                    Are you sure you want to delete{" "}
+                    <span className="text-pink-400 font-semibold">
+                      {deleteModal.shortCode}
+                    </span>
+                    ? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/5 bg-white/5 px-4 py-3 mb-6">
+                <p className="text-xs text-gray-500 font-medium mb-0.5">
+                  Short URL
+                </p>
+                <p className="text-xs text-gray-300 truncate">
+                  {deleteModal.shortUrl}
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  onClick={() => setDeleteModal(null)}
+                  className="flex-1 py-3 rounded-xl sm:rounded-2xl border border-white/10 bg-white/5 text-gray-300 text-sm font-semibold hover:bg-white/10 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 text-white text-sm font-semibold hover:opacity-90 transition shadow-lg shadow-red-900/40 ${deleteLoading ? 'opacity-60 pointer-events-none' : ''}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {notif.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.98 }}
+            transition={{ duration: 0.22 }}
+            className="fixed right-4 bottom-6 sm:bottom-8 z-50"
+          >
+            <div className="min-w-[220px] rounded-xl bg-[#0f0720]/95 border border-white/5 p-3 shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-white">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-white font-semibold truncate">
+                    {notif.message}
+                  </p>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
