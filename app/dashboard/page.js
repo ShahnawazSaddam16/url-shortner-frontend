@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import WelcomeUser from "../components/DashboardComponents/WelcomeUser";
 import UrlFetching from "../components/DashboardComponents/UrlFetching";
+import CreateLink from "../components/DashboardComponents/CreateLink";
 
 const Dashboard = () => {
   const router = useRouter();
@@ -45,6 +46,7 @@ const Dashboard = () => {
       <Navbar />
       <WelcomeUser />
       <UrlFetching />
+      <CreateLink/>
     </>
   );
 };
