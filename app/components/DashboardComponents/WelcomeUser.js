@@ -81,9 +81,9 @@ const WelcomeUser = () => {
       >
         {/*Create Link BTN */}
         <div className="flex justify-end items-end">
-          <button className="px-5 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600
+          <button className="px-2 py-1 sm:px-5 sm:py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600
           rounded-[10px] text-white font-semibold flex gap-2 transition-all duration-200
-          hover:bg-gradient-to-l from-purple-600 to-fuchsia-600">
+          hover:bg-gradient-to-l from-purple-600 to-fuchsia-600 text-[14px] sm:text-[16px]">
           <span><Plus /></span> Create New Link</button>
         </div>
 
