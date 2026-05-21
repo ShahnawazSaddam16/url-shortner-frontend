@@ -111,19 +111,19 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
                     value={customCode}
                     onChange={(e) => setCustomCode(e.target.value)}
                     placeholder="Custom Code"
-                    className="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10"
+                    className="w-full p-3 rounded-xl bg-white/5 text-white outline-none border border-white/10 focus:border-purple-500"
                   />
                   <input
                     type="date"
                     value={expiryDate}
                     onChange={(e) => setExpiryDate(e.target.value)}
-                    className="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10"
+                    className="w-full p-3 rounded-xl bg-white/5 text-white outline-none border border-white/10 focus:border-purple-500"
                   />
                   <input
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password Protect"
-                    className="w-full p-2 rounded-lg bg-white/5 text-white border border-white/10"
+                    className="w-full p-3 rounded-xl bg-white/5 text-white outline-none border border-white/10 focus:border-purple-500"
                   />
                 </motion.div>
               )}
