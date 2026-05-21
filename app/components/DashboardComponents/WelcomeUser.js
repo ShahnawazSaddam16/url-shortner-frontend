@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  CalendarDays,
   Sparkles,
   User,
   Link2,
@@ -17,7 +16,6 @@ const WelcomeUser = () => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
 
   const [user, setUser] = useState(null);
-  const [days, setDays] = useState(0);
   const [totalUrls, setTotalUrls] = useState(0);
   const [totalClicks, setTotalClicks] = useState(0);
 
@@ -33,12 +31,6 @@ const WelcomeUser = () => {
 
       if (data.success) {
         setUser(data.user);
-
-        if (data.user.createdAt) {
-          const created = new Date(data.user.createdAt);
-          const now = new Date();
-          setDays(Math.floor((now - created) / (1000 * 60 * 60 * 24)));
-        }
       }
     };
 
@@ -60,7 +52,6 @@ const WelcomeUser = () => {
 
   const cards = [
     { title: "User", value: user?.name || "...", icon: User },
-    { title: "Days", value: days, icon: CalendarDays },
     { title: "URLs", value: totalUrls, icon: Link2 },
     { title: "Clicks", value: totalClicks, icon: MousePointerClick },
   ];
@@ -108,8 +99,8 @@ const WelcomeUser = () => {
           </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-4 gap-3 mt-6">
+        {/* Cards (FIXED LAYOUT) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
           {cards.map((item, index) => {
             const Icon = item.icon;
 
@@ -117,14 +108,14 @@ const WelcomeUser = () => {
               <motion.div
                 key={index}
                 whileHover={{ y: -4 }}
-                className="bg-white/5 rounded-2xl px-3 py-3 border border-white/10"
+                className="bg-white/5 rounded-2xl px-6 py-4 border border-white/10 backdrop-blur-md"
               >
                 <div className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-pink-400" />
                   <h2 className="text-xs text-gray-300">{item.title}</h2>
                 </div>
 
-                <p className="text-white text-lg font-semibold mt-2 truncate">
+                <p className="text-white text-xl font-semibold mt-3 truncate">
                   {item.value}
                 </p>
               </motion.div>
@@ -137,7 +128,7 @@ const WelcomeUser = () => {
       <CreateLink
         isOpen={open}
         onClose={() => setOpen(false)}
-        onSuccess={(url) => showToast("URL Created Successfully")}
+        onSuccess={() => showToast("URL Created Successfully")}
       />
 
       {/* TOAST */}
