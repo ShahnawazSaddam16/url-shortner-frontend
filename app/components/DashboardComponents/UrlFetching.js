@@ -36,6 +36,7 @@ export const UrlFetching = () => {
   const [editForm, setEditForm] = useState({});
   const [notif, setNotif] = useState({ show: false, message: "", type: "" });
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const passwordCache = React.useRef({});
 
   const fetchUrls = async () => {
     try {
@@ -44,7 +45,17 @@ export const UrlFetching = () => {
       });
       const data = await res.json();
       if (data.success) {
-        setUrls(data.user_urls);
+        data.user_urls.forEach((item) => {
+          if (item.password) {
+            passwordCache.current[item._id] = item.password;
+          }
+        });
+        setUrls(
+          data.user_urls.map((item) => ({
+            ...item,
+            password: item.password ?? passwordCache.current[item._id],
+          }))
+        );
       }
     } catch (err) {
       console.log(err);
@@ -101,8 +112,16 @@ export const UrlFetching = () => {
       const data = await res.json();
 
       if (data.success) {
+        const updatedPassword = data.data.password ?? editForm.password;
+        if (updatedPassword) {
+          passwordCache.current[editModal._id] = updatedPassword;
+        }
         setUrls((prev) =>
-          prev.map((u) => (u._id === editModal._id ? data.data : u))
+          prev.map((u) =>
+            u._id === editModal._id
+              ? { ...u, ...data.data, password: updatedPassword }
+              : u
+          )
         );
         setNotif({ show: true, message: "Link updated", type: "success" });
         setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
@@ -136,6 +155,7 @@ export const UrlFetching = () => {
       }
 
       if (data && data.success) {
+        delete passwordCache.current[target._id];
         setDeleteModal(null);
         setNotif({ show: true, message: "Link deleted", type: "success" });
         setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
@@ -279,7 +299,6 @@ export const UrlFetching = () => {
                       </div>
                     </div>
 
-                    {item.password && (
                       <div className="flex items-start gap-2 sm:gap-3 rounded-xl border border-white/5 bg-white/5 px-2.5 py-2 min-[360px]:px-3 sm:px-4 sm:py-3">
                         <ShieldCheck className="w-3 h-3 min-[360px]:w-3.5 min-[360px]:h-3.5 sm:w-4 sm:h-4 text-pink-400 mt-0.5 shrink-0" />
                         <div className="min-h-0 flex-1">
@@ -305,7 +324,6 @@ export const UrlFetching = () => {
                           </div>
                         </div>
                       </div>
-                    )}
                   </div>
                 </div>
               </motion.div>
