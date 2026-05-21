@@ -10,6 +10,7 @@ export const Header = () => {
   return (
     <>
     <section className='mt-5'>
+      {/* Header */}
         <header className='bg-gradient-to-r from-[#12061d] via-[#1a0828] to-[#2b0d42] w-full
         h-25 flex flex-col justify-start items-start text-white'>
             <h1 className={`${montserrat.className} font-extrabold text-[30px] ml-2 mt-1`}>
