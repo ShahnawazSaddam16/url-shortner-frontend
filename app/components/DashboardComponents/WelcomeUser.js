@@ -7,6 +7,7 @@ import {
   User,
   Link2,
   MousePointerClick,
+  Plus,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -78,6 +79,14 @@ const WelcomeUser = () => {
         transition={{ duration: 0.5 }}
         className="w-full h-full bg-gradient-to-r from-[#12061d] via-[#1a0828] to-[#2b0d42] px-6 py-5"
       >
+        {/*Create Link BTN */}
+        <div className="flex justify-end items-end">
+          <button className="px-5 py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600
+          rounded-[10px] text-white font-semibold flex gap-2 transition-all duration-200
+          hover:bg-gradient-to-l from-purple-600 to-fuchsia-600">
+          <span><Plus /></span> Create New Link</button>
+        </div>
+
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 bg-white/5 py-2 w-33 rounded-full">
