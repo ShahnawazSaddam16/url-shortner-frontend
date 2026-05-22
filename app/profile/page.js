@@ -46,7 +46,6 @@ const Profile = () => {
     <>
     <Navbar />
     <Header />
-    <UserStats />
     </>
   )
 }
