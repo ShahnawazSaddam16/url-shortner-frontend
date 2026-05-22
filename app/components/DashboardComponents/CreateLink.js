@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown, Sparkles } from "lucide-react";
+import { X, ChevronDown, Sparkles, AlertTriangle } from "lucide-react";
 
 const CreateLink = ({ isOpen, onClose, onSuccess }) => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
@@ -14,6 +14,7 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
 
   const [loading, setLoading] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [error, setError] = useState("");
 
   const inputRef = useRef(null);
 
@@ -27,6 +28,7 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
     if (!originalUrl) return;
 
     setLoading(true);
+    setError("");
 
     try {
       const res = await fetch(`${API_ORIGIN}/shortner-url`, {
@@ -43,16 +45,19 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
 
       const data = await res.json();
 
-      if (data.success) {
-        onSuccess(data.data.shortUrl);
-        setOriginalUrl("");
-        setCustomCode("");
-        setExpiryDate("");
-        setPassword("");
-        onClose();
+      if (!res.ok || !data.success) {
+        setError(data.message || "Something went wrong");
+        return;
       }
+
+      onSuccess(data.data.shortUrl);
+      setOriginalUrl("");
+      setCustomCode("");
+      setExpiryDate("");
+      setPassword("");
+      onClose();
     } catch (err) {
-      console.log(err);
+      setError("Server error occurred");
     } finally {
       setLoading(false);
     }
@@ -61,13 +66,12 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="w-[92%] max-w-lg rounded-2xl bg-gradient-to-br from-[#1a0828] to-[#2b0d42] border border-white/10 p-6 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl bg-gradient-to-br from-[#1a0828] to-[#2b0d42] border border-white/10 p-6 shadow-2xl"
           >
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-white font-semibold flex items-center gap-2">
@@ -78,6 +82,13 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
                 <X className="text-gray-400 hover:text-white" />
               </button>
             </div>
+
+            {error && (
+              <div className="mb-4 flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                <AlertTriangle size={16} />
+                {error}
+              </div>
+            )}
 
             <input
               ref={inputRef}
@@ -132,7 +143,7 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full mt-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-semibold hover:opacity-90 transition"
+              className="w-full mt-5 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-semibold hover:opacity-90 transition disabled:opacity-60"
             >
               {loading ? "Creating..." : "Create Link"}
             </button>
