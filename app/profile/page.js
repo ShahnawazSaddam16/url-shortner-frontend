@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Header from "../components/ProfileComponents/Header";
+import UserStats from "../components/ProfileComponents/UserStats";
 
 
 const Profile = () => {
@@ -45,6 +46,7 @@ const Profile = () => {
     <>
     <Navbar />
     <Header />
+    <UserStats />
     </>
   )
 }
