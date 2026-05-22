@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../components/Navbar";
 import Header from "../components/ProfileComponents/Header";
 import UserStats from "../components/ProfileComponents/UserStats";
+import DeleteAccount from "../components/ProfileComponents/DeleteAccount";
 
 
 const Profile = () => {
@@ -46,6 +47,7 @@ const Profile = () => {
     <>
     <Navbar />
     <Header />
+    <DeleteAccount />
     </>
   )
 }
