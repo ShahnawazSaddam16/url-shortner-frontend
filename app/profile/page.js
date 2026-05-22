@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Header from "../components/ProfileComponents/Header";
 import UserStats from "../components/ProfileComponents/UserStats";
 import DeleteAccount from "../components/ProfileComponents/DeleteAccount";
+import QuickActions from "../components/ProfileComponents/QuickActions";
 
 
 const Profile = () => {
@@ -47,6 +48,7 @@ const Profile = () => {
     <>
     <Navbar />
     <Header />
+    <QuickActions />
     <DeleteAccount />
     </>
   )
