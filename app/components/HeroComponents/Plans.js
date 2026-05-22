@@ -67,7 +67,7 @@ const plans = [
 ];
 
 const Plans = () => {
-    const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "";
+  const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "";
 
   const [billing, setBilling] = useState("annual");
   const [confirmation, setConfirmation] = useState(false);
@@ -79,31 +79,45 @@ const Plans = () => {
     setSelectedPlan(plan);
     setConfirmation(true);
   };
-
   const submitPlan = async () => {
     if (!selectedPlan) return;
 
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_ORIGIN}/plan`, {
-        method: "POST",
+      const payload = {
+        planStatus: selectedPlan.name.toLowerCase(),
+        planCategory: selectedPlan.name,
+      };
+
+      let res = await fetch(`${API_ORIGIN}/plan`, {
+        method: "PUT",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          planStatus: billing,
-          planCategory: selectedPlan.name,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      let data = await res.json();
+
+      if (!data.success && res.status === 404) {
+        res = await fetch(`${API_ORIGIN}/plan`, {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        data = await res.json();
+      }
 
       if (data.success) {
         setToast({
           type: "success",
-          message: `${selectedPlan.name} plan activated (${billing})`,
+          message: `${selectedPlan.name} plan saved (${billing})`,
         });
       } else {
         setToast({
@@ -135,7 +149,8 @@ const Plans = () => {
           </h1>
 
           <p className="mt-2 text-gray-600 text-[16px] sm:text-[18px] max-w-2xl">
-            Flexible plans for all needs, from personal projects to large enterprises.
+            Flexible plans for all needs, from personal projects to large
+            enterprises.
           </p>
 
           <div className="mt-8 bg-white/80 backdrop-blur-xl shadow-xl rounded-full p-1 flex items-center">
