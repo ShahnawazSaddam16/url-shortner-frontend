@@ -3,6 +3,7 @@ import Heading from './HeroComponents/Heading'
 import UrlShortenerl from './HeroComponents/UrlShortener';
 import Features from './HeroComponents/Features';
 import AdditionalFeatures from './HeroComponents/AdditionalFeatures';
+import Plans from './HeroComponents/Plans';
 
 const Hero = () => {
   return (
@@ -11,6 +12,7 @@ const Hero = () => {
     <UrlShortenerl />
     <Features />
     <AdditionalFeatures />
+    <Plans />
     </>
   )
 }
