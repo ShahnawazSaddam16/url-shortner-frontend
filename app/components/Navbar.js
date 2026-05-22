@@ -147,7 +147,7 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Home", path: "/home" },
-    { label: "About", path: "/about" },
+    { label: "Features", path: "#features" },
     { label: "Plans", path: "/" },
     { label: "Terms", path: "/terms" },
     { label: "Dashboard", path: "/dashboard" },

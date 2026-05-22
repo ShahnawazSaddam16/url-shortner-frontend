@@ -48,8 +48,7 @@ const FeatureCard = ({ item, index, isVisible }) => {
       className={`feature-card group relative flex flex-col items-start text-left p-7 rounded-3xl border border-purple-100/60 bg-white/70 backdrop-blur-2xl overflow-hidden transition-all duration-700 ease-out cursor-default ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
       }`}
-      style={{ transitionDelay: `${index * 120}ms` }}
-    >
+      style={{ transitionDelay: `${index * 120}ms` }} id="features">
       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl bg-gradient-to-br from-purple-50/80 to-pink-50/80 pointer-events-none" />
 
       <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-gradient-to-br from-purple-200 to-pink-200 blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
