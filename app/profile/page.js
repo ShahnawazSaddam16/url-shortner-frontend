@@ -49,9 +49,13 @@ const Profile = () => {
     <>
     <Navbar />
     <Header />
+    <div className="flex flex-col sm:flex-row justify-center lg:justify-between items-center">
     <UrlSummary />
+    <div className="flex flex-col">
     <QuickActions />
     <DeleteAccount />
+    </div>
+    </div>
     </>
   )
 }
