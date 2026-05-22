@@ -79,6 +79,7 @@ const Plans = () => {
     setSelectedPlan(plan);
     setConfirmation(true);
   };
+
   const submitPlan = async () => {
     if (!selectedPlan) return;
 
@@ -86,7 +87,7 @@ const Plans = () => {
 
     try {
       const payload = {
-        planStatus: selectedPlan.name.toLowerCase(),
+        planStatus: billing,
         planCategory: selectedPlan.name,
       };
 
@@ -149,8 +150,7 @@ const Plans = () => {
           </h1>
 
           <p className="mt-2 text-gray-600 text-[16px] sm:text-[18px] max-w-2xl">
-            Flexible plans for all needs, from personal projects to large
-            enterprises.
+            Flexible plans for all needs, from personal projects to large enterprises.
           </p>
 
           <div className="mt-8 bg-white/80 backdrop-blur-xl shadow-xl rounded-full p-1 flex items-center">
