@@ -37,7 +37,7 @@ const UrlSummary = () => {
 
   return (
     <section className="mt-3 flex justify-center lg:justify-start px-4 sm:px-6">
-      <div className="w-full max-w-md rounded-3xl bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e293b] border border-white/10 shadow-2xl backdrop-blur-xl p-6">
+      <div className="w-[320px] sm:w-[400px] md:w-[400px] lg:w-[600px] rounded-3xl bg-gradient-to-br from-[#0f172a] via-[#111827] to-[#1e293b] border border-white/10 shadow-2xl backdrop-blur-xl p-6">
         <h1 className="text-xl font-bold text-white">URL Summary</h1>
 
         <div className="mt-5 space-y-5">
