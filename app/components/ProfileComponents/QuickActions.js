@@ -38,8 +38,9 @@ const QuickActions = () => {
               Analytics
             </button>
 
-            <button className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition py-3 text-sm font-medium">
-              <Wallet2 size={18} />
+            <button className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition py-3 text-sm font-medium"
+            onClick={()=>{router.push("/plan-history")}}>
+              <Wallet2 size={18}/>
               Plans
             </button>
           </div>

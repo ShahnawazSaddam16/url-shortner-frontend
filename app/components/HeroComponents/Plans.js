@@ -352,7 +352,7 @@ const Plans = () => {
       )}
 
       {toast && (
-        <div className="fixed bottom-5 right-5 bg-white shadow-xl px-5 py-3 rounded-xl border">
+        <div className="fixed bottom-5 right-5 bg-white shadow-xl px-5 py-3 rounded-xl">
           <p
             className={`text-sm font-medium ${
               toast.type === "success" ? "text-green-600" : "text-red-600"
