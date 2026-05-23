@@ -3,11 +3,15 @@
 import React, { useState } from "react";
 import { Montserrat } from "next/font/google";
 import { Check, Crown, Gem, Star, X } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY);
 
 const plans = [
   {
@@ -66,13 +70,141 @@ const plans = [
   },
 ];
 
+const CheckoutForm = ({ selectedPlan, billing, onClose, onSuccess, onError, API_ORIGIN }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+
+  const getAmount = () => {
+    const price = selectedPlan.price[billing];
+    return billing === "annual" ? price * 12 * 100 : price * 100;
+  };
+
+  const handleSubmit = async () => {
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+
+    try {
+      const intentRes = await fetch(`${API_ORIGIN}/create-payment-intent`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: getAmount() }),
+      });
+
+      const intentData = await intentRes.json();
+
+      if (!intentData.clientSecret) {
+        onError(intentData.message || "Failed to create payment intent");
+        setLoading(false);
+        return;
+      }
+
+      const cardElement = elements.getElement(CardElement);
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(intentData.clientSecret, {
+        payment_method: { card: cardElement },
+      });
+
+      if (error) {
+        onError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (paymentIntent.status === "succeeded") {
+        const payload = {
+          planStatus: billing,
+          planCategory: selectedPlan.name,
+          paymentIntentId: intentData.paymentIntentId,
+        };
+
+        const res = await fetch(`${API_ORIGIN}/plan`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          onSuccess(`${selectedPlan.name} plan activated (${billing})`);
+        } else {
+          onError(data.message || "Plan save failed");
+        }
+      }
+    } catch {
+      onError("Server error");
+    }
+
+    setLoading(false);
+    onClose();
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 w-[90%] max-w-md">
+      <h2 className="text-xl font-bold mb-4">Confirm Plan</h2>
+
+      <div className="flex flex-row gap-4 mb-4">
+        <div className="flex-1 bg-gray-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-gray-500 mb-1">Plan</p>
+          <p className="text-sm font-semibold text-gray-900">{selectedPlan.name}</p>
+        </div>
+        <div className="flex-1 bg-gray-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-gray-500 mb-1">Billing</p>
+          <p className="text-sm font-semibold text-gray-900 capitalize">{billing}</p>
+        </div>
+        <div className="flex-1 bg-gray-100 rounded-xl px-4 py-3">
+          <p className="text-xs text-gray-500 mb-1">Amount</p>
+          <p className="text-sm font-semibold text-gray-900">
+            ${billing === "annual" ? selectedPlan.price.annual  : selectedPlan.price.monthly}
+          </p>
+        </div>
+      </div>
+
+      <div className="p-4 rounded-xl bg-gray-100 mb-4">
+        <CardElement
+          options={{
+            style: {
+              base: {
+                fontSize: "16px",
+                color: "#111827",
+                "::placeholder": { color: "#9CA3AF" },
+              },
+              invalid: { color: "#EF4444" },
+            },
+          }}
+        />
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onClose}
+          className="flex-1 py-3 bg-gray-200 rounded-xl"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !stripe}
+          className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl"
+        >
+          {loading ? "Processing..." : "Confirm"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Plans = () => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN || "";
 
   const [billing, setBilling] = useState("annual");
   const [confirmation, setConfirmation] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
 
   const openConfirm = (plan) => {
@@ -80,62 +212,8 @@ const Plans = () => {
     setConfirmation(true);
   };
 
-  const submitPlan = async () => {
-    if (!selectedPlan) return;
-
-    setLoading(true);
-
-    try {
-      const payload = {
-        planStatus: billing,
-        planCategory: selectedPlan.name,
-      };
-
-      let res = await fetch(`${API_ORIGIN}/plan`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      let data = await res.json();
-
-      if (!data.success && res.status === 404) {
-        res = await fetch(`${API_ORIGIN}/plan`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        data = await res.json();
-      }
-
-      if (data.success) {
-        setToast({
-          type: "success",
-          message: `${selectedPlan.name} plan saved (${billing})`,
-        });
-      } else {
-        setToast({
-          type: "error",
-          message: data.message || "Something went wrong",
-        });
-      }
-    } catch (err) {
-      setToast({
-        type: "error",
-        message: "Server error",
-      });
-    }
-
-    setLoading(false);
-    setConfirmation(false);
-
+  const showToast = (type, message) => {
+    setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
 
@@ -260,34 +338,16 @@ const Plans = () => {
 
       {confirmation && selectedPlan && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-6 w-[90%] max-w-md">
-            <h2 className="text-xl font-bold mb-4">Confirm Plan</h2>
-
-            <p className="text-gray-600 mb-2">
-              Plan: <b>{selectedPlan.name}</b>
-            </p>
-
-            <p className="text-gray-600 mb-6">
-              Status: <b>{billing}</b>
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmation(false)}
-                className="flex-1 py-3 bg-gray-200 rounded-xl"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={submitPlan}
-                disabled={loading}
-                className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl"
-              >
-                {loading ? "Processing..." : "Confirm"}
-              </button>
-            </div>
-          </div>
+          <Elements stripe={stripePromise}>
+            <CheckoutForm
+              selectedPlan={selectedPlan}
+              billing={billing}
+              onClose={() => setConfirmation(false)}
+              onSuccess={(msg) => showToast("success", msg)}
+              onError={(msg) => showToast("error", msg)}
+              API_ORIGIN={API_ORIGIN}
+            />
+          </Elements>
         </div>
       )}
 
