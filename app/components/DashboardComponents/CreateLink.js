@@ -50,7 +50,10 @@ const CreateLink = ({ isOpen, onClose, onSuccess }) => {
         return;
       }
 
-      onSuccess(data.data.shortUrl);
+      if (onSuccess) {
+        onSuccess(data.data);
+      }
+
       setOriginalUrl("");
       setCustomCode("");
       setExpiryDate("");

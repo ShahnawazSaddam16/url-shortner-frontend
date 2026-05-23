@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import {
   Copy,
@@ -23,7 +23,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-export const UrlFetching = () => {
+export const UrlFetching = ({ refreshUrls }) => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
   const router = useRouter();
 
@@ -34,26 +34,35 @@ export const UrlFetching = () => {
   const [deleteModal, setDeleteModal] = useState(null);
   const [visiblePasswords, setVisiblePasswords] = useState({});
   const [editForm, setEditForm] = useState({});
-  const [notif, setNotif] = useState({ show: false, message: "", type: "" });
+  const [notif, setNotif] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const passwordCache = React.useRef({});
+
+  const passwordCache = useRef({});
 
   const fetchUrls = async () => {
     try {
       const res = await fetch(`${API_ORIGIN}/user-urls`, {
         credentials: "include",
       });
+
       const data = await res.json();
+
       if (data.success) {
         data.user_urls.forEach((item) => {
           if (item.password) {
             passwordCache.current[item._id] = item.password;
           }
         });
+
         setUrls(
           data.user_urls.map((item) => ({
             ...item,
-            password: item.password ?? passwordCache.current[item._id],
+            password:
+              item.password ?? passwordCache.current[item._id] ?? "",
           }))
         );
       }
@@ -64,16 +73,22 @@ export const UrlFetching = () => {
 
   useEffect(() => {
     fetchUrls();
-  }, [API_ORIGIN]);
+  }, [API_ORIGIN, refreshUrls]);
 
   const handleCopy = async (url, id) => {
     await navigator.clipboard.writeText(url);
     setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 1800);
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 1800);
   };
 
   const togglePassword = (id) => {
-    setVisiblePasswords((prev) => ({ ...prev, [id]: !prev[id] }));
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
   const openEdit = (item) => {
@@ -82,6 +97,7 @@ export const UrlFetching = () => {
       shortCode: item.shortCode || "",
       originalUrl: item.originalUrl || "",
       password: item.password || "",
+      expiryDate: item.expiryDate || "",
     });
   };
 
@@ -98,34 +114,41 @@ export const UrlFetching = () => {
         shortCode: editForm.shortCode,
       };
 
-      if (editForm.password && editForm.password.trim() !== "") {
+      if (editForm.password?.trim() !== "") {
         payload.password = editForm.password;
       }
 
-      const res = await fetch(`${API_ORIGIN}/updating-url/${editModal._id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${API_ORIGIN}/updating-url/${editModal._id}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await res.json();
 
       if (data.success) {
-        const updatedPassword = data.data.password ?? editForm.password;
-        if (updatedPassword) {
-          passwordCache.current[editModal._id] = updatedPassword;
-        }
-        setUrls((prev) =>
-          prev.map((u) =>
-            u._id === editModal._id
-              ? { ...u, ...data.data, password: updatedPassword }
-              : u
-          )
-        );
-        setNotif({ show: true, message: "Link updated", type: "success" });
-        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        setNotif({
+          show: true,
+          message: "Link updated",
+          type: "success",
+        });
+
+        setTimeout(() => {
+          setNotif((s) => ({
+            ...s,
+            show: false,
+          }));
+        }, 3000);
+
         closeEdit();
+
+        router.refresh();
       }
     } catch (err) {
       console.log(err);
@@ -135,44 +158,81 @@ export const UrlFetching = () => {
   const handleDelete = async () => {
     const target = deleteModal;
     setDeleteLoading(true);
+
     try {
-      const res = await fetch(`${API_ORIGIN}/deleting-url/${target._id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${API_ORIGIN}/deleting-url/${target._id}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
 
       const text = await res.text();
       let data = null;
+
       try {
         data = JSON.parse(text);
       } catch (e) {}
 
       if (!res.ok) {
-        setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
-        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        setNotif({
+          show: true,
+          message: (data && data.message) || "Failed to delete",
+          type: "error",
+        });
+
+        setTimeout(() => {
+          setNotif((s) => ({
+            ...s,
+            show: false,
+          }));
+        }, 3000);
+
         setDeleteLoading(false);
         return;
       }
 
-      if (data && data.success) {
+      if (data?.success) {
         delete passwordCache.current[target._id];
+
         setDeleteModal(null);
-        setNotif({ show: true, message: "Link deleted", type: "success" });
-        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
-        await fetchUrls();
+
+        setNotif({
+          show: true,
+          message: "Link deleted",
+          type: "success",
+        });
+
+        setTimeout(() => {
+          setNotif((s) => ({
+            ...s,
+            show: false,
+          }));
+        }, 3000);
+
+        router.refresh();
       } else {
-        setNotif({ show: true, message: (data && data.message) || "Failed to delete", type: "error" });
-        setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+        setNotif({
+          show: true,
+          message: (data && data.message) || "Failed to delete",
+          type: "error",
+        });
       }
     } catch (err) {
       console.log(err);
-      setNotif({ show: true, message: "Failed to delete", type: "error" });
-      setTimeout(() => setNotif((s) => ({ ...s, show: false })), 3000);
+
+      setNotif({
+        show: true,
+        message: "Failed to delete",
+        type: "error",
+      });
     } finally {
       setDeleteLoading(false);
     }
   };
 
+  
   return (
     <section className="mt-6 sm:mt-10 w-full px-0">
       <div className="w-full rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl p-3 sm:p-6 lg:p-8 shadow-2xl">

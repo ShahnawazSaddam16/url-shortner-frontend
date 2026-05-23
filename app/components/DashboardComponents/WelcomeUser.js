@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Sparkles,
   User,
@@ -12,7 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import CreateLink from "./CreateLink";
 
-const WelcomeUser = () => {
+const WelcomeUser = ({ refreshTrigger }) => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
 
   const [user, setUser] = useState(null);
@@ -22,44 +22,61 @@ const WelcomeUser = () => {
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
+    try {
       const res = await fetch(`${API_ORIGIN}/auth/me`, {
         credentials: "include",
       });
+
       const data = await res.json();
 
-      if (data.success) {
-        setUser(data.user);
-      }
-    };
+      if (data.success) setUser(data.user);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [API_ORIGIN]);
 
-    const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
+    try {
       const res = await fetch(`${API_ORIGIN}/user-urls`, {
         credentials: "include",
       });
+
       const data = await res.json();
 
       if (data.success) {
         setTotalUrls(data.totalShortUrls);
         setTotalClicks(data.totalClicks);
       }
-    };
-
-    fetchUser();
-    fetchUserStats();
+    } catch (err) {
+      console.error(err);
+    }
   }, [API_ORIGIN]);
+
+  const refreshDashboard = useCallback(async () => {
+    await Promise.all([fetchUser(), fetchUserStats()]);
+  }, [fetchUser, fetchUserStats]);
+
+  useEffect(() => {
+    refreshDashboard();
+  }, [refreshDashboard, refreshTrigger]);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  const handleSuccess = async () => {
+    await refreshDashboard();
+    showToast("URL Created Successfully");
+    setOpen(false);
+  };
 
   const cards = [
     { title: "User", value: user?.name || "...", icon: User },
     { title: "URLs", value: totalUrls, icon: Link2 },
     { title: "Clicks", value: totalClicks, icon: MousePointerClick },
   ];
-
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 2500);
-  };
 
   return (
     <section className="mt-6 relative">
@@ -69,19 +86,18 @@ const WelcomeUser = () => {
         transition={{ duration: 0.5 }}
         className="w-full h-full bg-gradient-to-r from-[#12061d] via-[#1a0828] to-[#2b0d42] px-6 py-5"
       >
-        {/* Create Link Button */}
         <div className="flex justify-end items-end">
           <button
             onClick={() => setOpen(true)}
             className="px-2 py-1 sm:px-5 sm:py-2 bg-gradient-to-r from-purple-600 to-fuchsia-600
-          rounded-[10px] text-white font-semibold flex gap-2 transition-all duration-200
-          hover:scale-105 text-[14px] sm:text-[16px]"
+            rounded-[10px] text-white font-semibold flex gap-2 transition-all duration-200
+            hover:scale-105 text-[14px] sm:text-[16px]"
           >
-            <Plus /> Create New Link
+            <Plus />
+            Create New Link
           </button>
         </div>
 
-        {/* Header */}
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2 bg-white/5 py-2 w-33 rounded-full">
@@ -99,7 +115,6 @@ const WelcomeUser = () => {
           </div>
         </div>
 
-        {/* Cards (FIXED LAYOUT) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
           {cards.map((item, index) => {
             const Icon = item.icon;
@@ -124,14 +139,12 @@ const WelcomeUser = () => {
         </div>
       </motion.div>
 
-      {/* POPUP */}
       <CreateLink
         isOpen={open}
         onClose={() => setOpen(false)}
-        onSuccess={() => showToast("URL Created Successfully")}
+        onSuccess={handleSuccess}
       />
 
-      {/* TOAST */}
       <AnimatePresence>
         {toast && (
           <motion.div
