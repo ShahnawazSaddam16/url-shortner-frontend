@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import Image from "next/image";
 import {
   Copy,
@@ -22,12 +22,13 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useDashboard } from "./DashboardProvider";
 
-export const UrlFetching = ({ refreshUrls }) => {
+export const UrlFetching = () => {
   const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
   const router = useRouter();
+  const { urls, setUrls, fetchUrls } = useDashboard();
 
-  const [urls, setUrls] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
   const [qrModal, setQrModal] = useState(null);
   const [editModal, setEditModal] = useState(null);
@@ -42,38 +43,6 @@ export const UrlFetching = ({ refreshUrls }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const passwordCache = useRef({});
-
-  const fetchUrls = async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/user-urls`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        data.user_urls.forEach((item) => {
-          if (item.password) {
-            passwordCache.current[item._id] = item.password;
-          }
-        });
-
-        setUrls(
-          data.user_urls.map((item) => ({
-            ...item,
-            password:
-              item.password ?? passwordCache.current[item._id] ?? "",
-          }))
-        );
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchUrls();
-  }, [API_ORIGIN, refreshUrls]);
 
   const handleCopy = async (url, id) => {
     await navigator.clipboard.writeText(url);
@@ -148,7 +117,7 @@ export const UrlFetching = ({ refreshUrls }) => {
 
         closeEdit();
 
-        router.refresh();
+        await fetchUrls();
       }
     } catch (err) {
       console.log(err);
@@ -211,7 +180,7 @@ export const UrlFetching = ({ refreshUrls }) => {
           }));
         }, 3000);
 
-        router.refresh();
+        await fetchUrls();
       } else {
         setNotif({
           show: true,

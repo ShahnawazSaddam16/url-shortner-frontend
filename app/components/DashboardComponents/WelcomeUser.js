@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Sparkles,
   User,
@@ -11,55 +11,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateLink from "./CreateLink";
+import { useDashboard } from "./DashboardProvider";
 
-const WelcomeUser = ({ refreshTrigger }) => {
-  const API_ORIGIN = process.env.NEXT_PUBLIC_API_ORIGIN;
-
-  const [user, setUser] = useState(null);
-  const [totalUrls, setTotalUrls] = useState(0);
-  const [totalClicks, setTotalClicks] = useState(0);
-
+const WelcomeUser = () => {
+  const { user, urls, refreshAll } = useDashboard();
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState(null);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/auth/me`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (data.success) setUser(data.user);
-    } catch (err) {
-      console.error(err);
-    }
-  }, [API_ORIGIN]);
-
-  const fetchUserStats = useCallback(async () => {
-    try {
-      const res = await fetch(`${API_ORIGIN}/user-urls`, {
-        credentials: "include",
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        setTotalUrls(data.totalShortUrls);
-        setTotalClicks(data.totalClicks);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [API_ORIGIN]);
-
-  const refreshDashboard = useCallback(async () => {
-    await Promise.all([fetchUser(), fetchUserStats()]);
-  }, [fetchUser, fetchUserStats]);
-
-  useEffect(() => {
-    refreshDashboard();
-  }, [refreshDashboard, refreshTrigger]);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -67,15 +24,15 @@ const WelcomeUser = ({ refreshTrigger }) => {
   };
 
   const handleSuccess = async () => {
-    await refreshDashboard();
+    await refreshAll();
     showToast("URL Created Successfully");
     setOpen(false);
   };
 
   const cards = [
     { title: "User", value: user?.name || "...", icon: User },
-    { title: "URLs", value: totalUrls, icon: Link2 },
-    { title: "Clicks", value: totalClicks, icon: MousePointerClick },
+    { title: "URLs", value: urls.length, icon: Link2 },
+    { title: "Clicks", value: urls.reduce((sum, u) => sum + (u.clicks || 0), 0), icon: MousePointerClick },
   ];
 
   return (
